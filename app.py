@@ -110,6 +110,7 @@ else:
     if st.sidebar.button("Remove / Change Signature"):
         del st.session_state["signature_img"]
         st.rerun()
+
 # --- MAIN SECTION: PDF Upload & Drag-Drop Component ---
 st.markdown("### 2. Document Workspace & Positioning")
 pdf_file = st.file_uploader("Upload Target PDF Document", type=["pdf"], key="pdf_up")
@@ -133,7 +134,7 @@ if pdf_file is not None and "signature_img" in st.session_state:
     sig_b64 = img_to_b64(st.session_state["signature_img"])
     pdf_b64 = base64.b64encode(pdf_bytes).decode()
     
-    st.info("Drag and drop the signature box to your desired position on the document preview below.")
+    st.info("Drag and drop (or touch and drag on mobile) the signature box to your desired position on the document preview below.")
 
     html_code = f"""
     <!DOCTYPE html>
@@ -150,6 +151,7 @@ if pdf_file is not None and "signature_img" in st.session_state:
         max-width: 100%;
         background: #ffffff;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        touch-action: none;
       }}
       #pdf-page {{
         display: block;
@@ -167,6 +169,7 @@ if pdf_file is not None and "signature_img" in st.session_state:
         background: rgba(37, 99, 235, 0.05);
         padding: 2px;
         border-radius: 4px;
+        touch-action: none;
       }}
       #signature-box:active {{
         cursor: grabbing;
@@ -209,6 +212,7 @@ if pdf_file is not None and "signature_img" in st.session_state:
     let isDragging = false;
     let startX, startY;
 
+    // Mouse Events
     box.addEventListener('mousedown', (e) => {{
         isDragging = true;
         startX = e.clientX - box.offsetLeft;
@@ -229,6 +233,33 @@ if pdf_file is not None and "signature_img" in st.session_state:
     }});
 
     document.addEventListener('mouseup', () => {{
+        isDragging = false;
+    }});
+
+    // Touch Events for Mobile / Tablets
+    box.addEventListener('touchstart', (e) => {{
+        isDragging = true;
+        const touch = e.touches[0];
+        startX = touch.clientX - box.offsetLeft;
+        startY = touch.clientY - box.offsetTop;
+        e.preventDefault();
+    }}, {{ passive: false }});
+
+    document.addEventListener('touchmove', (e) => {{
+        if (!isDragging) return;
+        const touch = e.touches[0];
+        let newX = touch.clientX - startX;
+        let newY = touch.clientY - startY;
+        
+        if(newX < 0) newX = 0;
+        if(newY < 0) newY = 0;
+        
+        box.style.left = newX + 'px';
+        box.style.top = newY + 'px';
+        e.preventDefault();
+    }}, {{ passive: false }});
+
+    document.addEventListener('touchend', () => {{
         isDragging = false;
     }});
 
