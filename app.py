@@ -142,31 +142,37 @@ if pdf_file is not None and "signature_img" in st.session_state:
     <head>
     <script src="https://unpkg.com/pdf-lib@1.4.0/dist/pdf-lib.min.js"></script>
     <style>
+      body {{
+        margin: 0;
+        padding: 10px;
+        background: #f8fafc;
+      }}
       #container {{
         position: relative;
-        display: inline-block;
+        display: block;
+        margin: 0 auto;
         border: 1px solid #cbd5e1;
         border-radius: 6px;
         user-select: none;
-        max-width: 100%;
+        width: 100%;
+        max-width: 650px;
         background: #ffffff;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        touch-action: none;
+        overflow: hidden;
       }}
       #pdf-page {{
         display: block;
         width: 100%;
-        max-width: 750px;
         height: auto;
       }}
       #signature-box {{
         position: absolute;
-        top: 100px;
-        left: 100px;
-        width: 150px;
+        top: 80px;
+        left: 80px;
+        width: 140px;
         cursor: grab;
         border: 2px dashed #2563eb;
-        background: rgba(37, 99, 235, 0.05);
+        background: rgba(37, 99, 235, 0.08);
         padding: 2px;
         border-radius: 4px;
         touch-action: none;
@@ -180,15 +186,19 @@ if pdf_file is not None and "signature_img" in st.session_state:
         pointer-events: none;
       }}
       .download-btn {{
-        margin-top: 20px;
+        display: block;
+        width: 100%;
+        max-width: 650px;
+        margin: 15px auto 0 auto;
         background-color: #2563eb;
         color: white;
-        padding: 10px 20px;
+        padding: 12px 20px;
         border: none;
         border-radius: 6px;
         cursor: pointer;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 600;
+        text-align: center;
         transition: background-color 0.2s;
       }}
       .download-btn:hover {{
@@ -204,11 +214,12 @@ if pdf_file is not None and "signature_img" in st.session_state:
             <img src="data:image/png;base64,{sig_b64}">
         </div>
     </div>
-    <br>
+    
     <button class="download-btn" onclick="downloadSignedPDF()">Download Signed Document</button>
 
     <script>
     const box = document.getElementById('signature-box');
+    const container = document.getElementById('container');
     let isDragging = false;
     let startX, startY;
 
@@ -225,8 +236,13 @@ if pdf_file is not None and "signature_img" in st.session_state:
         let newX = e.clientX - startX;
         let newY = e.clientY - startY;
         
+        const maxX = container.clientWidth - box.clientWidth;
+        const maxY = container.clientHeight - box.clientHeight;
+        
         if(newX < 0) newX = 0;
+        if(newX > maxX) newX = maxX;
         if(newY < 0) newY = 0;
+        if(newY > maxY) newY = maxY;
         
         box.style.left = newX + 'px';
         box.style.top = newY + 'px';
@@ -236,14 +252,14 @@ if pdf_file is not None and "signature_img" in st.session_state:
         isDragging = false;
     }});
 
-    // Touch Events for Mobile / Tablets
+    // Touch Events for Mobile
     box.addEventListener('touchstart', (e) => {{
         isDragging = true;
         const touch = e.touches[0];
         startX = touch.clientX - box.offsetLeft;
         startY = touch.clientY - box.offsetTop;
-        e.preventDefault();
-    }}, {{ passive: false }});
+        e.stopPropagation();
+    }}, {{ passive: true }});
 
     document.addEventListener('touchmove', (e) => {{
         if (!isDragging) return;
@@ -251,13 +267,17 @@ if pdf_file is not None and "signature_img" in st.session_state:
         let newX = touch.clientX - startX;
         let newY = touch.clientY - startY;
         
+        const maxX = container.clientWidth - box.clientWidth;
+        const maxY = container.clientHeight - box.clientHeight;
+        
         if(newX < 0) newX = 0;
+        if(newX > maxX) newX = maxX;
         if(newY < 0) newY = 0;
+        if(newY > maxY) newY = maxY;
         
         box.style.left = newX + 'px';
         box.style.top = newY + 'px';
-        e.preventDefault();
-    }}, {{ passive: false }});
+    }}, {{ passive: true }});
 
     document.addEventListener('touchend', () => {{
         isDragging = false;
@@ -318,7 +338,7 @@ if pdf_file is not None and "signature_img" in st.session_state:
     </html>
     """
     
-    st.components.v1.html(html_code, height=750, scrolling=True)
+    st.components.v1.html(html_code, height=850, scrolling=True)
 
 elif pdf_file is not None and "signature_img" not in st.session_state:
     st.warning("Please upload and configure your signature in the sidebar first.")
